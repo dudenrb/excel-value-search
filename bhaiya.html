@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Value Search</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        /* Custom scrollbar for result container */
+        .overflow-y-auto::-webkit-scrollbar {
+            width: 8px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-track {
+            background: #e0e0e0;
+            border-radius: 10px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-4xl border border-gray-200">
+        <div class="flex flex-col items-center mb-6">
+            <!-- Added logo image -->
+            <img src="C:\Users\Hp\Downloads\excel search value\excel.png" onerror="this.onerror=null; this.src='image_883b4c.png'" alt="Company Logo" class="h-20 w-20 mb-4 rounded-full shadow-md object-cover">
+            <h1 class="text-3xl font-bold text-gray-800 text-center">Excel Value Search Tool</h1>
+        </div>
+
+
+        <!-- File Upload Section -->
+        <div class="mb-6 border-b pb-4 border-gray-200">
+            <label for="excelFile" class="block text-gray-700 text-sm font-medium mb-2">Upload Excel File (.xlsx):</label>
+            <div class="flex items-center justify-center w-full">
+                <label for="excelFile" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition duration-300 ease-in-out">
+                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                        <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L7 9m3-3 3 3"/>
+                        </svg>
+                        <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                        <p class="text-xs text-gray-500">.XLSX files only</p>
+                    </div>
+                    <input id="excelFile" type="file" class="hidden" accept=".xlsx" />
+                </label>
+            </div>
+            <p id="fileName" class="text-sm text-gray-600 mt-2 text-center"></p>
+        </div>
+
+        <!-- Search Section -->
+        <div class="mb-6 flex flex-col sm:flex-row gap-4">
+            <div class="flex-grow">
+                <label for="searchValue" class="block text-gray-700 text-sm font-medium mb-2">Search Value:</label>
+                <input type="text" id="searchValue" placeholder="Enter value to search" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm transition duration-150 ease-in-out">
+            </div>
+            <div class="flex-shrink-0 flex items-end">
+                <button id="searchButton" class="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300 ease-in-out transform hover:scale-105">
+                    Search
+                </button>
+            </div>
+        </div>
+
+        <!-- Message Box for Alerts -->
+        <div id="messageBox" class="hidden bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-lg relative mb-4" role="alert">
+            <span id="messageText" class="block sm:inline"></span>
+            <span class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onclick="document.getElementById('messageBox').classList.add('hidden');">
+                <svg class="fill-current h-6 w-6 text-yellow-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.103l-2.651 3.746a1.2 1.2 0 1 1-1.697-1.697l3.746-2.651-3.746-2.651a1.2 1.2 0 1 1 1.697-1.697L10 8.897l2.651-3.746a1.2 1.2 0 1 1 1.697 1.697L11.103 10l3.746 2.651a1.2 1.2 0 0 1 0 1.698z"/></svg>
+            </span>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsContainer" class="mt-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Search Results:</h2>
+            <div id="searchResults" class="min-h-[150px] max-h-[400px] overflow-y-auto border border-gray-300 rounded-lg p-4 bg-gray-50">
+                <p class="text-gray-500">No file uploaded or no search performed yet.</p>
+            </div>
+        </div>
+
+        <!-- Developed By Section -->
+        <div class="mt-8 pt-4 border-t border-gray-200 text-center text-gray-600 text-sm">
+            <p>Developed by Nikhil Raj</p>
+            <p>
+                <a href="https://www.linkedin.com/in/nikhil811307/" target="_blank" class="text-blue-600 hover:underline mx-2">LinkedIn</a> |
+                <a href="https://github.com/dudenrb?tab=repositories" target="_blank" class="text-blue-600 hover:underline mx-2">GitHub</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- SheetJS CDN - Make sure to include this AFTER your HTML body to ensure elements are loaded -->
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+
+    <script>
+        let workbook = null; // To store the parsed workbook data
+        let sheetData = {}; // To store data of each sheet as an array of objects
+        const fileInput = document.getElementById('excelFile');
+        const fileNameDisplay = document.getElementById('fileName');
+        const searchValueInput = document.getElementById('searchValue');
+        const searchButton = document.getElementById('searchButton');
+        const searchResultsDiv = document.getElementById('searchResults');
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText');
+
+        /**
+         * Shows a message in the message box.
+         * @param {string} message - The message to display.
+         * @param {string} type - Type of message (e.g., 'warning', 'success', 'error').
+         */
+        function showMessage(message, type = 'warning') {
+            messageText.textContent = message;
+            messageBox.classList.remove('hidden');
+            // You can add more styling based on type if needed, e.g., bg-red-100 for error
+            if (type === 'error') {
+                messageBox.classList.remove('bg-yellow-100', 'border-yellow-400', 'text-yellow-700');
+                messageBox.classList.add('bg-red-100', 'border-red-400', 'text-red-700');
+            } else if (type === 'success') {
+                messageBox.classList.remove('bg-yellow-100', 'border-yellow-400', 'text-yellow-700');
+                messageBox.classList.add('bg-green-100', 'border-green-400', 'text-green-700');
+            } else { // default to warning
+                messageBox.classList.remove('bg-red-100', 'border-red-400', 'text-red-700', 'bg-green-100', 'border-green-400', 'text-green-700');
+                messageBox.classList.add('bg-yellow-100', 'border-yellow-400', 'text-yellow-700');
+            }
+        }
+
+        /**
+         * Hides the message box.
+         */
+        function hideMessage() {
+            messageBox.classList.add('hidden');
+        }
+
+        /**
+         * Handles the file input change event. Reads the Excel file.
+         */
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                fileNameDisplay.textContent = '';
+                searchResultsDiv.innerHTML = '<p class="text-gray-500">No file uploaded or no search performed yet.</p>';
+                workbook = null;
+                sheetData = {};
+                hideMessage();
+                return;
+            }
+
+            if (!file.name.endsWith('.xlsx')) {
+                showMessage('Please upload a valid .xlsx Excel file.', 'error');
+                fileNameDisplay.textContent = '';
+                event.target.value = ''; // Clear the input
+                workbook = null;
+                sheetData = {};
+                return;
+            }
+
+            fileNameDisplay.textContent = `File selected: ${file.name}`;
+            hideMessage(); // Hide any previous messages
+
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    workbook = XLSX.read(data, { type: 'array' });
+                    sheetData = {}; // Clear previous data
+                    // Read each sheet into an array of objects
+                    workbook.SheetNames.forEach(sheetName => {
+                        const worksheet = workbook.Sheets[sheetName];
+                        sheetData[sheetName] = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // header:1 to get array of arrays
+                    });
+                    searchResultsDiv.innerHTML = `<p class="text-gray-600">File "${file.name}" loaded successfully. You can now search for values.</p>`;
+                } catch (error) {
+                    showMessage(`Error reading file: ${error.message}. Please ensure it's a valid Excel file.`, 'error');
+                    fileNameDisplay.textContent = '';
+                    event.target.value = '';
+                    workbook = null;
+                    sheetData = {};
+                    console.error("Error reading Excel file:", error);
+                }
+            };
+
+            reader.onerror = (error) => {
+                showMessage('Failed to read file.', 'error');
+                fileNameDisplay.textContent = '';
+                event.target.value = '';
+                workbook = null;
+                sheetData = {};
+                console.error("FileReader error:", error);
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+
+        /**
+         * Handles the search button click event. Searches for the value in the loaded Excel data.
+         */
+        searchButton.addEventListener('click', () => {
+            if (!workbook) {
+                showMessage('Please upload an Excel file first.', 'warning');
+                return;
+            }
+
+            const searchValue = searchValueInput.value.trim();
+            if (!searchValue) {
+                showMessage('Please enter a value to search for.', 'warning');
+                return;
+            }
+
+            hideMessage(); // Hide any previous messages
+            searchResultsDiv.innerHTML = ''; // Clear previous results
+
+            let foundResults = false;
+            const resultsHtml = [];
+
+            // Iterate through each sheet
+            workbook.SheetNames.forEach(sheetName => {
+                const currentSheetRows = sheetData[sheetName];
+                const sheetMatches = [];
+
+                // Assuming the first row is headers for displaying column names later
+                const headers = currentSheetRows.length > 0 ? currentSheetRows[0] : [];
+
+                for (let rowIndex = 0; rowIndex < currentSheetRows.length; rowIndex++) {
+                    const row = currentSheetRows[rowIndex];
+                    let rowHasMatch = false;
+                    const matchedCellsInRow = [];
+
+                    for (let colIndex = 0; colIndex < row.length; colIndex++) {
+                        const cellValue = String(row[colIndex]).trim(); // Convert to string and trim for consistent comparison
+                        if (cellValue.includes(searchValue)) {
+                            rowHasMatch = true;
+                            // Attempt to get header name, fallback to column index
+                            const columnName = headers[colIndex] ? headers[colIndex] : `Column ${colIndex + 1}`;
+                            matchedCellsInRow.push({
+                                colName: columnName,
+                                colIndex: colIndex,
+                                value: row[colIndex]
+                            });
+                        }
+                    }
+
+                    if (rowHasMatch) {
+                        foundResults = true;
+                        sheetMatches.push({
+                            rowIndex: rowIndex,
+                            fullRow: row,
+                            matchedCells: matchedCellsInRow
+                        });
+                    }
+                }
+
+                if (sheetMatches.length > 0) {
+                    resultsHtml.push(`
+                        <div class="mb-6 p-4 border border-blue-200 bg-blue-50 rounded-lg shadow-sm">
+                            <h3 class="text-xl font-semibold text-blue-800 mb-3">Sheet: "${sheetName}"</h3>
+                    `);
+
+                    sheetMatches.forEach(match => {
+                        resultsHtml.push(`
+                            <div class="mb-4 p-3 border border-blue-300 bg-white rounded-lg shadow-sm">
+                                <p class="font-medium text-gray-700">Row ${match.rowIndex + 1}:</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600 mt-2">
+                        `);
+
+                        match.matchedCells.forEach(cell => {
+                            // Modified line: Removed " (Col ${cell.colIndex + 1})" from the display
+                            resultsHtml.push(`
+                                    <p><span class="font-semibold text-blue-700">${cell.colName}:</span> ${cell.value}</p>
+                            `);
+                        });
+                        resultsHtml.push(`
+                                </div>
+                                <p class="mt-3 text-sm text-gray-500 italic">Full Row Data: ${JSON.stringify(match.fullRow)}</p>
+                            </div>
+                        `);
+                    });
+                    resultsHtml.push(`</div>`);
+                }
+            });
+
+            if (foundResults) {
+                searchResultsDiv.innerHTML = resultsHtml.join('');
+            } else {
+                searchResultsDiv.innerHTML = `<p class="text-gray-500">No matches found for "${searchValue}" in any sheet.</p>`;
+            }
+        });
+
+        // Add drag and drop functionality
+        const dropArea = document.querySelector('label[for="excelFile"]');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => dropArea.classList.add('border-blue-500', 'bg-blue-50'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => dropArea.classList.remove('border-blue-500', 'bg-blue-50'), false);
+        });
+
+        dropArea.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files; // Set the files to the input element
+            fileInput.dispatchEvent(new Event('change')); // Manually trigger the change event
+        }, false);
+
+    </script>
+</body>
+</html>
